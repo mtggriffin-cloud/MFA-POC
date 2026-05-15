@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HK_SPWL3 產品計算機</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #dcfce7 100%);
+            min-height: 100vh;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border-radius: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .input-group {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            transition: all 0.2s ease;
+        }
+
+        .input-group:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        /* 原版藍色滑桿樣式 */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #3b82f6;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .toggle-btn {
+            transition: all 0.2s ease;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 名稱輸入框焦點樣式 */
+        .name-input:focus {
+            border-color: #3b82f6;
+            ring: 2px;
+            ring-color: #bfdbfe;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 flex items-center justify-center">
+
+    <div class="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 fade-in">
+        
+        <!-- 左側：輸入面板 -->
+        <div class="glass-panel p-6 lg:p-8 lg:col-span-4 flex flex-col gap-6">
+            <div>
+                <h1 class="text-3xl font-black text-blue-700 tracking-tight mb-1">HK_SPWL3</h1>
+                <p class="text-gray-500 font-medium text-sm">產品試算工具</p>
+            </div>
+
+            <div class="space-y-4">
+                <!-- 投保人名稱 -->
+                <div class="input-group">
+                    <label class="block text-xs font-bold text-gray-400 uppercase mb-2">投保人名稱</label>
+                    <input type="text" id="userName" placeholder="請輸入姓名" class="w-full bg-gray-50 border border-gray-200 text-gray-700 p-2 rounded-lg font-medium outline-none name-input transition-all" oninput="updateName(this.value)">
+                </div>
+
+                <!-- 計劃選擇 -->
+                <div class="input-group">
+                    <label class="block text-xs font-bold text-gray-400 uppercase mb-2">選擇計劃</label>
+                    <select id="planCode" class="w-full bg-gray-50 border-none text-gray-700 p-2 rounded-lg font-bold outline-none cursor-pointer" onchange="calculate()">
+                        <option value="SP50PN">SP50PN (標準)</option>
+                        <option value="SP50SSB">SP50SSB (平衡)</option>
+                        <option value="SP50SSC">SP50SSC (尊享)</option>
+                    </select>
+                </div>
+
+                <!-- 性別與吸煙狀態 -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="input-group">
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-2">性別</label>
+                        <div class="flex bg-gray-100 p-1 rounded-lg">
+                            <button onclick="setGender('M')" id="btnMale" class="toggle-btn flex-1 py-2 text-sm font-bold rounded-md bg-white text-blue-600 shadow-sm">男</button>
+                            <button onclick="setGender('F')" id="btnFemale" class="toggle-btn flex-1 py-2 text-sm font-bold rounded-md text-gray-500 hover:text-gray-700">女</button>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-2">吸煙狀況</label>
+                        <div class="flex bg-gray-100 p-1 rounded-lg">
+                            <button onclick="setSmoker('N')" id="btnNonSmoker" class="toggle-btn flex-1 py-2 text-sm font-bold rounded-md bg-white text-green-600 shadow-sm">非</button>
+                            <button onclick="setSmoker('S')" id="btnSmoker" class="toggle-btn flex-1 py-2 text-sm font-bold rounded-md text-gray-500 hover:text-gray-700">吸</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 年齡滑桿 -->
+                <div class="input-group">
+                    <div class="flex justify-between items-center mb-3">
+                        <label class="text-xs font-bold text-gray-400 uppercase">投保年齡</label>
+                        <span id="ageDisplay" class="text-lg font-black text-blue-600">30 歲</span>
+                    </div>
+                    <input type="range" id="age" min="30" max="60" step="1" value="30" oninput="updateAge(this.value)">
+                </div>
+
+                <!-- 保費滑桿 -->
+                <div class="input-group">
+                    <div class="flex justify-between items-center mb-3">
+                        <label class="text-xs font-bold text-gray-400 uppercase">整付保費 (USD)</label>
+                        <span id="premiumDisplay" class="text-lg font-black text-blue-600">$100,000</span>
+                    </div>
+                    <input type="range" id="premium" min="50000" max="1000000" step="10000" value="100000" oninput="updatePremium(this.value)">
+                </div>
+            </div>
+
+            <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                <p class="text-[11px] text-blue-800 leading-relaxed font-medium">
+                    提示：請先輸入投保人名稱，然後拖動滑動條查看 40 年間預期現金價值的動態變化。
+                </p>
+            </div>
+        </div>
+
+        <!-- 右側：結果與圖表 -->
+        <div class="lg:col-span-8 flex flex-col gap-6">
+            
+            <!-- 數據指標 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="glass-panel p-6">
+                    <p class="text-gray-400 text-xs font-bold uppercase mb-1">預期利率</p>
+                    <p class="text-3xl font-black text-slate-800" id="statInt">--</p>
+                </div>
+                <div class="glass-panel p-6">
+                    <p class="text-gray-400 text-xs font-bold uppercase mb-1">鎖定期</p>
+                    <p class="text-3xl font-black text-slate-800" id="statLock">--</p>
+                </div>
+                <div class="glass-panel p-6 bg-blue-600">
+                    <p class="text-blue-100 text-xs font-bold uppercase mb-1">第20年預期價值</p>
+                    <p class="text-3xl font-black text-white" id="statVal20">$0</p>
+                </div>
+            </div>
+
+            <!-- 圖表區域 -->
+            <div class="glass-panel p-6 flex-grow min-h-[450px] flex flex-col">
+                <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
+                    <span id="chartTitle">40年預期現金價值走勢 (USD)</span>
+                </h2>
+                <div class="flex-grow relative">
+                    <canvas id="mainChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const appState = {
+            name: '',
+            gender: 'M',
+            smoker: 'N',
+            age: 30,
+            premium: 100000,
+            plan: 'SP50PN'
+        };
+
+        const parameters = {
+            'SP50PN': { interest: 3.5, lockIn: 50, smokerFactor: 0.95 },
+            'SP50SSB': { interest: 4.2, lockIn: 60, smokerFactor: 0.92 },
+            'SP50SSC': { interest: 3.8, lockIn: 45, smokerFactor: 0.97 }
+        };
+
+        let myChart = null;
+
+        function updateName(val) {
+            appState.name = val;
+            const titleElem = document.getElementById('chartTitle');
+            if (val.trim()) {
+                titleElem.innerText = `${val} 的 40年預期現金價值走勢 (USD)`;
+            } else {
+                titleElem.innerText = `40年預期現金價值走勢 (USD)`;
+            }
+        }
+
+        function setGender(g) {
+            appState.gender = g;
+            const common = "toggle-btn flex-1 py-2 text-sm font-bold rounded-md";
+            document.getElementById('btnMale').className = g === 'M' ? `${common} bg-white text-blue-600 shadow-sm` : `${common} text-gray-500 hover:text-gray-700`;
+            document.getElementById('btnFemale').className = g === 'F' ? `${common} bg-white text-pink-600 shadow-sm` : `${common} text-gray-500 hover:text-gray-700`;
+            calculate();
+        }
+
+        function setSmoker(s) {
+            appState.smoker = s;
+            const common = "toggle-btn flex-1 py-2 text-sm font-bold rounded-md";
+            document.getElementById('btnNonSmoker').className = s === 'N' ? `${common} bg-white text-green-600 shadow-sm` : `${common} text-gray-500 hover:text-gray-700`;
+            document.getElementById('btnSmoker').className = s === 'S' ? `${common} bg-white text-orange-600 shadow-sm` : `${common} text-gray-500 hover:text-gray-700`;
+            calculate();
+        }
+
+        function updateAge(val) {
+            appState.age = parseInt(val);
+            document.getElementById('ageDisplay').innerText = val + ' 歲';
+            calculate();
+        }
+
+        function updatePremium(val) {
+            appState.premium = parseInt(val);
+            document.getElementById('premiumDisplay').innerText = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+            calculate();
+        }
+
+        function calculate() {
+            appState.plan = document.getElementById('planCode').value;
+            const param = parameters[appState.plan];
+            
+            document.getElementById('statInt').innerText = param.interest.toFixed(2) + '%';
+            document.getElementById('statLock').innerText = param.lockIn + ' 歲';
+
+            const data = [];
+            let currentVal = appState.premium * 0.9; 
+            const smokerImpact = appState.smoker === 'S' ? param.smokerFactor : 1.0;
+            const ageImpact = 1 - ((appState.age - 30) * 0.003);
+
+            for (let year = 1; year <= 40; year++) {
+                let growth = (param.interest / 100) * smokerImpact * ageImpact;
+                if (year > 10) growth += 0.01;
+                currentVal = currentVal * (1 + growth);
+                data.push(currentVal);
+            }
+
+            if (myChart) {
+                myChart.data.datasets[0].data = data;
+                myChart.update('none');
+            }
+            
+            document.getElementById('statVal20').innerText = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(data[19]);
+        }
+
+        window.onload = function() {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 40}, (_, i) => `第 ${i+1} 年`),
+                    datasets: [{
+                        data: [],
+                        borderColor: '#2563eb',
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        fill: true,
+                        backgroundColor: 'rgba(37, 99, 235, 0.05)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { 
+                            grid: { color: '#f1f5f9' },
+                            ticks: { callback: val => '$' + (val/1000) + 'k' }
+                        }
+                    }
+                }
+            });
+            calculate();
+        };
+    </script>
+</body>
+</html>

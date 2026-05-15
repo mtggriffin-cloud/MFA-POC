@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AXA 安盛 | 「享未來」人壽保障</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
+    <style>
+        :root {
+            --axa-red: #e30613;
+            --axa-blue: #004a99;
+            --text-dark: #333;
+            --text-light: #fff;
+            --bg-light: #f8f9fa;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+            color: var(--text-dark);
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            box-sizing: border-box;
+            position: relative;
+            text-align: center;
+        }
+
+        /* Hero Section */
+        #hero {
+            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)),
+                        url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=1920'); /* Placeholder for graduation theme */
+            background-size: cover;
+            background-position: center;
+            color: var(--text-light);
+        }
+
+        .logo-container {
+            position: absolute;
+            top: 40px;
+            left: 40px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-placeholder {
+            background: var(--axa-red);
+            color: white;
+            padding: 5px 15px;
+            font-weight: bold;
+            font-size: 24px;
+        }
+
+        h1 {
+            font-size: 4rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .subtitle {
+            font-size: 1.8rem;
+            letter-spacing: 4px;
+        }
+
+        /* Feature Cards Section */
+        #features {
+            background-color: var(--bg-light);
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .icon-box {
+            width: 60px;
+            height: 60px;
+            background: var(--axa-red);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .feature-card h3 {
+            color: var(--axa-blue);
+            margin-bottom: 15px;
+        }
+
+        /* Content Section */
+        #details {
+            background: white;
+        }
+
+        .content-block {
+            max-width: 800px;
+            line-height: 1.8;
+            font-size: 1.2rem;
+            text-align: left;
+        }
+
+        /* CTA Section */
+        #cta {
+            background: linear-gradient(135deg, var(--axa-blue), #002d5e);
+            color: white;
+        }
+
+        .btn-contact {
+            display: inline-block;
+            padding: 18px 45px;
+            background-color: var(--axa-red);
+            color: white;
+            text-decoration: none;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-radius: 50px;
+            margin-top: 30px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(227, 6, 19, 0.4);
+        }
+
+        .btn-contact:hover {
+            transform: scale(1.05);
+            background-color: #ff0a1f;
+            box-shadow: 0 8px 25px rgba(227, 6, 19, 0.6);
+        }
+
+        .portal-switch {
+            position: fixed;
+            right: 18px;
+            bottom: 20px;
+            z-index: 60;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.15);
+            border-radius: 999px;
+            padding: 8px 10px;
+            backdrop-filter: blur(8px);
+        }
+
+        .portal-switch button,
+        .portal-switch a {
+            border: none;
+            text-decoration: none;
+            background: transparent;
+            color: #111827;
+            font-weight: 700;
+            font-size: 13px;
+            border-radius: 999px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .portal-switch button:hover,
+        .portal-switch a:hover {
+            background: #eff6ff;
+            color: #004a99;
+        }
+
+        .portal-tag {
+            font-size: 12px;
+            color: #4b5563;
+            font-weight: 700;
+            padding: 0 4px;
+        }
+
+        body.page-enter {
+            animation: pageEnter 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        body.slide-out-right {
+            animation: slideOutRight 0.45s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+        }
+
+        @keyframes pageEnter {
+            from {
+                opacity: 0;
+                transform: translateX(-28px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0.1;
+                transform: translateX(24vw);
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            .subtitle { font-size: 1.2rem; }
+        }
+
+        @media (max-width: 640px) {
+            .portal-switch {
+                right: 10px;
+                left: 10px;
+                justify-content: center;
+            }
+
+            .portal-tag {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="page-enter">
+
+    <div class="portal-switch" aria-label="入口導覽列">
+        <button type="button" onclick="navigateProduct('right')">右滑到 Gemini →</button>
+        <span class="portal-tag">產品切換</span>
+        <a href="../market_insights/demo_macro_market_insights.html">回到市場首頁</a>
+    </div>
+
+    <!-- Hero Section -->
+    <section id="hero">
+        <div class="logo-container">
+            <div class="logo-placeholder">AXA 安盛</div>
+        </div>
+        <div data-aos="fade-up" data-aos-duration="1500">
+            <h1>保障未來</h1>
+            <p class="subtitle">豐碩盡享</p>
+        </div>
+    </section>
+
+    <!-- Core Features Section -->
+    <section id="features">
+        <h2 data-aos="fade-down" style="font-size: 2.5rem; margin-bottom: 50px;">產品核心優勢</h2>
+        <div class="feature-grid">
+            <div class="feature-card" data-aos="zoom-in" data-aos-delay="100">
+                <div class=\"icon-box\">🛡️</div>
+                <h3>全方位保障</h3>
+                <p>為您及摯愛家人提供穩健的財政保障，讓生活無憂。</p>
+            </div>
+            <div class="feature-card" data-aos="zoom-in" data-aos-delay="300">
+                <div class=\"icon-box\">📈</div>
+                <h3>資產增值</h3>
+                <p>透過保證增值紅利及終期紅利，助您穩步累積財富。</p>
+            </div>
+            <div class="feature-card" data-aos="zoom-in" data-aos-delay="500">
+                <div class=\"icon-box\">✨</div>
+                <h3>靈活規劃</h3>
+                <p>可根據不同人生階段需求，彈性調整保險保障與儲蓄方案。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Detail Section -->
+    <section id="details">
+        <div class="content-block" data-aos="fade-right">
+            <h2 style="color: var(--axa-red); border-left: 5px solid var(--axa-red); padding-left: 15px;">未雨綢繆，讓摯愛生活無憂</h2>
+            <p>在追求夢想的道路上，「享未來」人壽保障計劃為您提供一站式人壽保障及儲蓄方案。無論是應對意外風險，還是為未來退休生活做準備，我們都能為您量身打造最合適的財政後盾。</p>
+            <ul style="list-style: none; padding: 0;">
+                <li>✅ <strong>保障至高齡：</strong> 提供長期的財務安全感。</li>
+                <li>✅ <strong>紅利回饋：</strong> 享受保證及非保證紅利帶來的增值潛力。</li>
+                <li>✅ <strong>附加保障：</strong> 可選擇意外附加契約，增加額外保障。</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="cta">
+        <div data-aos="zoom-out" data-aos-duration="1000">
+            <h2 style="font-size: 3rem;">準備好規劃您的未來了嗎？</h2>
+            <p style="font-size: 1.3rem; opacity: 0.9;">立即與專業顧問對話，定制專屬於您的保障計劃</p>
+            <a href="calculator-claude.html" class="btn-contact">開始投保</a>
+        </div>
+    </section>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <script>
+        AOS.init({
+            duration: 1000,
+            once: false,
+            mirror: true
+        });
+
+        let startX = 0;
+        let endX = 0;
+
+        function navigateProduct(direction) {
+            if (direction === 'right') {
+                document.body.classList.add('slide-out-right');
+                setTimeout(() => {
+                    window.location.href = 'product-genimi.html';
+                }, 420);
+            }
+        }
+
+        function handleSwipe() {
+            const delta = endX - startX;
+            if (Math.abs(delta) < 60) return;
+
+            if (delta > 0) {
+                navigateProduct('right');
+            }
+        }
+
+        document.addEventListener('touchstart', (e) => {
+            startX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        document.addEventListener('touchend', (e) => {
+            endX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') {
+                navigateProduct('right');
+            }
+        });
+    </script>
+</body>
+</html>

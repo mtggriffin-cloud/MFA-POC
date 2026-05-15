@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HK_WEA 產品計算機 - Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            min-height: 100vh;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 24px;
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: #ffffff;
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: -8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .stat-card {
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="mb-8 text-center md:text-left">
+            <h1 class declass="text-4xl font-bold text-white drop-shadow-md">HK_WEA 產品計算機</h1>
+            <p class="text-white/80 text-lg mt-2">即時財務趨勢模擬演示</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Input Panel (4 Cols) -->
+            <aside class="lg:col-span-4 space-y-6">
+                <div class="glass p-6 text-white">
+                    <h2 class="text-xl font-semibold mb-6 border-b border-white/20 pb-2">投保參數設定</h2>
+
+                    <!-- Gender Selection -->
+                    <div class="mb-8">
+                        <label class="block text-sm font-medium mb-3">性別 (Gender)</label>
+                        <div class="flex gap-4">
+                            <label class="flex-1 cursor-pointer">
+                                <input type="radio" name="gender" value="M" class="hidden peer" checked>
+                                <div class="text-center p-3 rounded-xl border border-white/30 peer-checked:bg-white peer-checked:text-pink-600 transition-all">男性</div>
+                            </label>
+                            <label class="flex-1 cursor-pointer">
+                                <input type="radio" name="gender" value="F" class="hidden peer">
+                                <div class="text-center p-3 rounded-xl border border-white/30 peer-checked:bg-white peer-checked:text-pink-600 transition-all">女性</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Age Slider -->
+                    <div class="mb-8">
+                        <div class="flex justify-between mb-3">
+                            <label class="text-sm font-medium">投保年齡 (Age)</label>
+                            <span id="ageValue" class="font-bold text-lg">35</span>
+                        </div>
+                        <input type="range" id="ageSlider" min="30" max="60" value="35" class="accent-white">
+                    </div>
+
+                    <!-- Premium Slider -->
+                    <div class="mb-8">
+                        <div class="flex justify-between mb-3">
+                            <label class="text-sm font-medium">年繳保費 (Annual Premium)</label>
+                            <span id="premiumValue" class="font-bold text-lg text-yellow-300">$50,000</span>
+                        </div>
+                        <input type="range" id="premiumSlider" min="10000" max="1000000" step="5000" value="50000" class="accent-yellow-300">
+                    </div>
+
+                    <!-- Smoker Toggle -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-3">吸煙狀況 (Smoker Status)</label>
+                        <div class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="smokerToggle" class="sr-only peer">
+                            <div class="w-14 h-7 bg-white/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-pink-500"></div>
+                            <span id="smokerLabel" class="ml-3 text-sm font-medium">非吸煙</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Card -->
+                <div class="glass p-6 text-white/90 text-sm leading-relaxed">
+                    <p class="font-semibold mb-2">💡 模擬說明</p>
+                    <p>本數據基於 HK_WEA 產品精算模型模擬。年度價值計算參考了利率修正因子與吸煙風險係數。實際保額可能因承保審核而有所不同。</p>
+                </div>
+            </aside>
+
+            <!-- Main Content (8 Cols) -->
+            <main class="lg:col-span-8 space-y-6">
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="glass p-6 stat-card text-white">
+                        <p class="text-xs opacity-70 uppercase tracking-wider">第 20 年現金價值</p>
+                        <p id="stat20" class="text-3xl font-bold mt-2">$0</p>
+                    </div>
+                    <div class="glass p-6 stat-card text-white">
+                        <p class="text-xs opacity-70 uppercase tracking-wider">第 40 年現金價值</p>
+                        <p id="stat40" class="text-3xl font-bold mt-2 text-yellow-300">$0</p>
+                    </div>
+                    <div class="glass p-6 stat-card text-white">
+                        <p class="text-xs opacity-70 uppercase tracking-wider">預期年化收益率</p>
+                        <p id="statRate" class="text-3xl font-bold mt-2">0.00%</p>
+                    </div>
+                </div>
+
+                <!-- Chart Container -->
+                <div class="glass p-6 text-white">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-medium">現金價值增長趨勢 (Cash Value Growth)</h3>
+                        <div class="flex items-center text-xs space-x-2">
+                            <span class="w-3 h-3 bg-white rounded-full"></span>
+                            <span>預期增長曲線</span>
+                        </div>
+                    </div>
+                    <div class="relative h-[400px] w-full">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Configuration constants (Simulated from ibuy_quote_api_study.md)
+        const CONFIG = {
+            INTEREST_RATE: 0.045, // 4.5% Base Rate
+            SMOKER_FACTOR: 1.15,  // Smoker premium/value impact
+            MAX_YEARS: 40,
+            BASE_RATE_KEY: 'MA'    // Product Code Prefix
+        };
+
+        // DOM Elements
+        const ageSlider = document.getElementById('ageSlider');
+        const premiumSlider = document.getElementById('premiumSlider');
+        const smokerToggle = document.getElementById('smokerToggle');
+        const genderRadios = document.getElementsByName('gender');
+
+        const ageValueDisplay = document.getElementById('ageValue');
+        const premiumValueDisplay = document.getElementById('premiumValue');
+        const smokerLabel = document.getElementById('smokerLabel');
+
+        const stat20 = document.getElementById('stat20');
+        const stat40 = document.getElementById('stat40');
+        const statRate = document.getElementById('statRate');
+
+        const ctx = document.getElementById('growthChart').getContext('2d');
+        let growthChart;
+
+        // Initialize Chart
+        function initChart() {
+            growthChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: CONFIG.MAX_YEARS + 1}, (_, i) => `Year ${i}`),
+                    datasets: [{
+                        label: 'Cash Value',
+                        data: [],
+                        borderColor: '#ffffff',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#ffffff',
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        tension: 0.4,
+                        fill: true,
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: {
+                                color: 'rgba(255,255,255,0.7)',
+                                callback: value => '$' + value.toLocaleString()
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: 'rgba(255,255,255,0.7)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Animation helper
+        function animateValue(obj, start, end, duration, isCurrency = true) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const current = progress * (end - start) + start;
+
+                const formatted = isCurrency
+                    ? '$' + Math.floor(current).toLocaleString()
+                    : current.toFixed(2) + '%';
+
+                obj.innerHTML = formatted;
+
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // Core Calculation Logic
+        function calculate() {
+            const age = parseInt(ageSlider.value);
+            const premium = parseInt(premiumSlider.value);
+            const isSmoker = smokerToggle.checked;
+            let gender = 'M';
+            for (const r of genderRadios) {
+                if (r.checked) {
+                    gender = r.value;
+                    break;
+                }
+            }
+
+            // UI Updates
+            ageValueDisplay.innerText = age;
+            premiumValueDisplay.innerText = '$' + premium.toLocaleString();
+            smokerLabel.innerText = isSmoker ? '吸煙' : '非吸煙';
+
+            // Simulation logic
+            // In real app, this would call an API like /quoteEngine/calculate
+            // Here we simulate the exponential growth seen in insurance products
+            const dataPoints = [];
+            const growthRate = CONFIG.INTEREST_RATE * (isSmoker ? 0.9 : 1.0); // Smokers might have slightly different cash value profiles in this simulation
+
+            for (let year = 0; year <= CONFIG.MAX_YEARS; year++) {
+                // Compound growth formula: P * (1 + r)^t
+                // We add a "lock-in" period effect where growth is slower early on
+                const lockInEffect = year < 10 ? 0.7 : 1.0;
+                const value = premium * Math.pow(1 + growthRate, year) * lockInEffect;
+                dataPoints.push(Math.round(value));
+            }
+
+            // Update Chart
+            growthChart.data.datasets[0].data = dataPoints;
+            growthChart.update();
+
+            // Update Stats with animation
+            const val20 = dataPoints[20];
+            const val40 = dataPoints[40];
+
+            animateValue(stat20, 0, val20, 800);
+            animateValue(stat40, 0, val40, 1200);
+            animateValue(statRate, 0, (growthRate * 100), 1000, false);
+        }
+
+        // Event Listeners
+        ageSlider.addEventListener('input', calculate);
+        premiumSlider.addEventListener('input', calculate);
+        smokerToggle.addEventListener('change', calculate);
+        genderRadios.forEach(r => r.addEventListener('change', calculate));
+
+        // Init
+        window.onload = () => {
+            initChart();
+            calculate();
+        };
+    </script>
+</body>
+</html>

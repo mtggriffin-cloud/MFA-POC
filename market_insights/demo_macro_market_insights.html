@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 保險互動入口 - 總經與市場情報區</title>
+    <style>
+        /* CSS Reset & Variables */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft JhengHei", sans-serif;
+        }
+
+        :root {
+            --bg-color: #f5f5f7;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --text-primary: #1d1d1f;
+            --text-secondary: #86868b;
+            --accent-blue: #0071e3;
+            --accent-green: #34c759;
+            --accent-orange: #ff9500;
+            --accent-purple: #af52de;
+            --border-radius: 20px;
+            --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: radial-gradient(circle at 10% 20%, rgba(240, 240, 245, 0.8) 0%, rgba(245, 245, 247, 1) 100%);
+        }
+
+        /* Container */
+        .dashboard-container {
+            width: 100%;
+            max-width: 1100px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 10px;
+        }
+
+        .header h1 {
+            font-size: 26px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+        }
+
+        .header p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .portal-nav {
+            position: relative;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            padding: 6px;
+        }
+
+        .portal-nav::before {
+            content: "";
+            position: absolute;
+            inset: -8px;
+            border-radius: 22px;
+            background: linear-gradient(120deg, rgba(0, 113, 227, 0.2), rgba(175, 82, 222, 0.14), rgba(52, 199, 89, 0.14));
+            filter: blur(10px);
+            z-index: -1;
+            animation: portalGlow 6s ease-in-out infinite;
+        }
+
+        .portal-link {
+            position: relative;
+            text-decoration: none;
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.86);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            overflow: hidden;
+            transition: var(--transition-smooth);
+        }
+
+        .portal-link::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(105deg, rgba(0,113,227,0.08), rgba(52,199,89,0.06));
+            transform: translateX(-100%);
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .portal-link:hover {
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 12px 26px rgba(0, 0, 0, 0.08);
+        }
+
+        .portal-link:hover::after {
+            transform: translateX(0);
+        }
+
+        .portal-link-content {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .portal-label {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.4px;
+            color: var(--text-secondary);
+        }
+
+        .portal-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #141416;
+        }
+
+        .portal-desc {
+            font-size: 12px;
+            color: #5d5d63;
+        }
+
+        .portal-arrow {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--accent-blue);
+            transform: translateX(0);
+            transition: transform 0.35s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .portal-link:hover .portal-arrow {
+            transform: translateX(3px);
+        }
+
+        @keyframes portalGlow {
+            0%,
+            100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        .ai-badge {
+            background: linear-gradient(135deg, #0071e3, #af52de);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(0, 113, 227, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Main Grid Layout */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        @media (min-width: 900px) {
+            .grid {
+                grid-template-columns: 1.2fr 1fr;
+            }
+        }
+
+        /* Card Base */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: var(--border-radius);
+            padding: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+            transition: var(--transition-smooth);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+            border-color: rgba(255, 255, 255, 0.8);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Widget: Macro Indicators */
+        .macro-widget {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .indicator-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 14px;
+            border: 1px solid rgba(0, 0, 0, 0.02);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .indicator-row:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: scale(1.01);
+        }
+
+        .indicator-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .indicator-name {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .indicator-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .indicator-value-group {
+            text-align: right;
+        }
+
+        .indicator-value {
+            font-size: 16px;
+            font-weight: 700;
+            font-family: "SF Pro Text", -apple-system, sans-serif;
+        }
+
+        .trend-up { color: var(--accent-green); }
+        .trend-down { color: var(--accent-blue); }
+        .trend-warning { color: var(--accent-orange); }
+
+        .indicator-trend {
+            font-size: 11px;
+            font-weight: 500;
+            margin-top: 2px;
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.03);
+        }
+
+        /* Detail Slide Down Panels */
+        .detail-panel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 12px;
+            margin-top: -12px;
+            margin-bottom: 4px;
+        }
+
+        .detail-panel.active {
+            max-height: 200px;
+            padding: 16px;
+            border: 1px solid rgba(0, 0, 0, 0.03);
+            margin-top: -8px;
+            margin-bottom: 12px;
+        }
+
+        .detail-content {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #424245;
+        }
+
+        .detail-content strong {
+            color: var(--text-primary);
+        }
+
+        /* AI Assistant: Copilot Area */
+        .ai-copilot {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .pulse-indicator {
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-green);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.4);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.7);
+            }
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 6px rgba(52, 199, 89, 0);
+            }
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(52, 199, 89, 0);
+            }
+        }
+
+        .scenarios-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.03);
+            padding: 4px;
+            border-radius: 10px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: var(--text-primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            font-weight: 600;
+        }
+
+        /* Script Container Box */
+        .script-box-container {
+            position: relative;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .script-box {
+            background: #fff;
+            border-radius: 14px;
+            padding: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.01);
+            line-height: 1.7;
+            font-size: 14px;
+            color: var(--text-primary);
+            min-height: 180px;
+            transition: var(--transition-smooth);
+            opacity: 0;
+            transform: translateY(10px);
+            display: none;
+        }
+
+        .script-box.active {
+            opacity: 1;
+            transform: translateY(0);
+            display: block;
+        }
+
+        .script-box p {
+            margin-bottom: 12px;
+        }
+
+        .script-highlight {
+            background: rgba(0, 113, 227, 0.06);
+            border-left: 3px solid var(--accent-blue);
+            padding: 10px 14px;
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+            color: #0062c4;
+            margin: 12px 0;
+        }
+
+        .target-clients {
+            margin-top: 16px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .client-tag {
+            background: rgba(175, 82, 222, 0.1);
+            color: var(--accent-purple);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        /* Action Footer Inside Copilot Card */
+        .card-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            flex: 1;
+            border: none;
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0062c4;
+            box-shadow: 0 4px 12px rgba(0, 113, 227, 0.2);
+        }
+
+        .btn-secondary {
+            background: rgba(0, 0, 0, 0.04);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 0, 0, 0.08);
+        }
+
+        /* Tooltip Notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 500;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            transition: var(--transition-smooth);
+            opacity: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        @media (max-width: 640px) {
+            .portal-link {
+                padding: 16px;
+            }
+
+            .portal-title {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        
+        <!-- Header Section -->
+        <div class="header">
+            <div>
+                <p>市場與資產配置規劃中樞</p>
+                <h1>總經與市場情報區</h1>
+            </div>
+            <div class="ai-badge">
+                <span class="pulse-indicator"></span>
+                AI Agent 即時運算中
+            </div>
+        </div>
+
+        <div class="portal-nav">
+            <a class="portal-link" href="../products/product-genimi.html">
+                <div class="portal-link-content">
+                    <span class="portal-label">產品入口 01</span>
+                    <span class="portal-title">Gemini 互動產品頁</span>
+                    <span class="portal-desc">進入具 AI 分析與情境導覽的展示頁面</span>
+                </div>
+                <span class="portal-arrow">→</span>
+            </a>
+
+            <a class="portal-link" href="../products/product-claude.html">
+                <div class="portal-link-content">
+                    <span class="portal-label">產品入口 02</span>
+                    <span class="portal-title">Claude 互動產品頁</span>
+                    <span class="portal-desc">進入視覺導向與故事式呈現的展示頁面</span>
+                </div>
+                <span class="portal-arrow">→</span>
+            </a>
+        </div>
+
+        <!-- Main Grid Layout -->
+        <div class="grid">
+            
+            <!-- Widget 1: Macro & Market Indicators -->
+            <div class="card">
+                <div class="card-title">
+                    <!-- Icon: Globe / Market -->
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-.778.099-1.533.284-2.253"></path>
+                    </svg>
+                    動態數據小工具 <span style="font-weight: normal; font-size: 13px; color: var(--text-secondary); margin-left: auto;">點擊解鎖背後機會</span>
+                </div>
+
+                <div class="macro-widget">
+                    
+                    <!-- Row 1: Interest Rate -->
+                    <div class="indicator-row" onclick="toggleDetail('rate-detail')">
+                        <div class="indicator-info">
+                            <span class="indicator-name">全球基準利率預測 (Fed Rate)</span>
+                            <span class="indicator-desc">美國聯準會利率點陣圖與市場共識</span>
+                        </div>
+                        <div class="indicator-value-group">
+                            <span class="indicator-value trend-down">預期降息 (4.25%)</span><br>
+                            <span class="indicator-trend trend-down">機率: 78% 年底前</span>
+                        </div>
+                    </div>
+                    <!-- Detail Pane 1 -->
+                    <div id="rate-detail" class="detail-panel">
+                        <div class="detail-content">
+                            <strong>利率政策解讀：</strong><br>
+                            因通膨趨緩與就業增長放緩，市場主流預估聯準會年底前仍有 2 碼的降息空間。
+                            <br><span style="color: var(--accent-blue); font-weight: 500;">➔ 利多配置建議：</span>鎖定高息美元債、投資型保單（固定收益與債券基金比例）。
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Employment Data -->
+                    <div class="indicator-row" onclick="toggleDetail('job-detail')">
+                        <div class="indicator-info">
+                            <span class="indicator-name">非農就業數據趨勢 (NFP)</span>
+                            <span class="indicator-desc">反映勞動市場熱度與薪資增長動能</span>
+                        </div>
+                        <div class="indicator-value-group">
+                            <span class="indicator-value trend-up">新增 165K</span><br>
+                            <span class="indicator-trend trend-up">穩定擴張 (失業率 3.9%)</span>
+                        </div>
+                    </div>
+                    <!-- Detail Pane 2 -->
+                    <div id="job-detail" class="detail-panel">
+                        <div class="detail-content">
+                            <strong>勞動市場分析：</strong><br>
+                            就業人數穩定小幅增長，未出現經濟衰退警訊。軟著陸信心增強，有利於風險性資產表現。
+                            <br><span style="color: var(--accent-purple); font-weight: 500;">➔ 利多配置建議：</span>增持大型股票基金（如 Consumer Staples 及 AI 基礎建設板塊）。
+                        </div>
+                    </div>
+
+                    <!-- Row 3: Trade Agreements -->
+                    <div class="indicator-row" onclick="toggleDetail('trade-detail')">
+                        <div class="indicator-info">
+                            <span class="indicator-name">關鍵貿易協定與農產品關稅</span>
+                            <span class="indicator-desc">關聯大宗商品（如大豆期貨）與新興市場</span>
+                        </div>
+                        <div class="indicator-value-group">
+                            <span class="indicator-value trend-warning">中美關稅壁壘鬆動</span><br>
+                            <span class="indicator-trend trend-warning">大豆採購機率上升 15%</span>
+                        </div>
+                    </div>
+                    <!-- Detail Pane 3 -->
+                    <div id="trade-detail" class="detail-panel">
+                        <div class="detail-content">
+                            <strong>地緣貿易解讀：</strong><br>
+                            新一輪關稅協商釋出善意，預估中國將增加對美農產品進口。
+                            <br><span style="color: var(--accent-orange); font-weight: 500;">➔ 利多配置建議：</span>關注大宗商品基金、新興市場拉美/巴西平衡型基金之波動與布局時機。
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Widget 2: AI Copilot -->
+            <div class="card ai-copilot">
+                <div class="card-title">
+                    <!-- Icon: Star/Magic -->
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: var(--accent-purple);">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 21l8.982-11.795H14l1-6.105L6.018 14.904H9.813z"></path>
+                    </svg>
+                    AI 銷售輔助與情境話術
+                </div>
+
+                <!-- Scenario Tabs -->
+                <div class="scenarios-tabs">
+                    <button class="tab-btn active" onclick="switchScenario('scenario-rate')">降息趨勢開場</button>
+                    <button class="tab-btn" onclick="switchScenario('scenario-trade')">貿易戰布局機遇</button>
+                    <button class="tab-btn" onclick="switchScenario('scenario-estate')">高資產傳承</button>
+                </div>
+
+                <!-- Script Boxes -->
+                <div class="script-box-container">
+                    
+                    <!-- Script 1: Rate Decline -->
+                    <div id="scenario-rate" class="script-box active">
+                        <p><strong>適合時機：</strong>當降息預期升高，客戶手中的活存或短天期理財商品收益即將下滑時。</p>
+                        <div class="script-highlight">
+                            「陳大哥，最近有注意到聯準會即將進一步降息的消息嗎？這代表之後定存或短天期商品的利率會逐漸縮水。我今天特別幫您精算了幾款能提前『鎖定長期高收益率』的配置方案，能確保您未來的現金流不縮水，今天下午或明天，我們花三分鐘在線上討論一下？」
+                        </div>
+                        <div class="target-clients">
+                            目標客群：持有大筆定存、偏好保守收益之客戶 
+                            <span class="client-tag">固定收益偏好</span>
+                        </div>
+                    </div>
+
+                    <!-- Script 2: Trade / Commodities -->
+                    <div id="scenario-trade" class="script-box">
+                        <p><strong>適合時機：</strong>當國際貿易談判出現突破，大宗商品或新興市場市場出現波動反彈時。</p>
+                        <div class="script-highlight">
+                            「李總，最近中美貿易關稅出現了進一步放寬的跡象，商品市場如大宗物資和新興拉美市場已經有些觸底反彈的動能。考量到您的資產分散配置，我們現在的投資型保單中有連結幾檔極具抗通膨潛力的基金。我剛用系統幫您做好了一份動態配置簡報，您現在方便收信看一下嗎？」
+                        </div>
+                        <div class="target-clients">
+                            目標客群：中高風險偏好、有大宗商品/期貨配置經驗之客戶
+                            <span class="client-tag">積極型投資</span>
+                        </div>
+                    </div>
+
+                    <!-- Script 3: Estate Planning -->
+                    <div id="scenario-estate" class="script-box">
+                        <p><strong>適合時機：</strong>適合持有海外或境內高額資產，關注傳承、稅務優化與資產保全之高資產客戶。</p>
+                        <div class="script-highlight">
+                            「張董，最近全球宏觀稅務法規有一些新動向。對於像您這樣跨國與多重資產配置的企業主，如何在降息循環啟動時做好資產的『防火牆與無痛傳承』非常關鍵。我們團隊特別設計了一個結合保單架構的資產傳承模型，能有效在確保流動性的同時做到資產保全，這週五我想登門向您簡報二十分鐘？」
+                        </div>
+                        <div class="target-clients">
+                            目標客群：高淨值企業主、家族資產規劃核心決策者
+                            <span class="client-tag">資產傳承/保全</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Action Button Group -->
+                <div class="card-actions">
+                    <button class="btn btn-secondary" onclick="copyCurrentScript()">
+                        <!-- Icon: Copy -->
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline; margin-right:4px; vertical-align:middle;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        複製 AI 話術
+                    </button>
+                    <button class="btn btn-primary" onclick="sendToClient()">
+                        <!-- Icon: Share / Send -->
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline; margin-right:4px; vertical-align:middle;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 10.742l1.99 1.1c1.253.692 2.827-.107 2.827-1.543V8.802c0-1.436-1.574-2.235-2.827-1.543l-1.99 1.1m0 3.382a4.5 4.5 0 01-1.89-2.175m1.89 2.175L4 12V8l4.684 2.742z"></path>
+                        </svg>
+                        直接生成動態簡報並傳送
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="color: var(--accent-green);">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+        </svg>
+        <span id="toast-text">已成功複製話術至剪貼簿</span>
+    </div>
+
+    <script>
+        // Toggle slide-down detail panels for Macro Indicators
+        function toggleDetail(panelId) {
+            // Close all other panels first for Accordion effect
+            const panels = document.querySelectorAll('.detail-panel');
+            panels.forEach(panel => {
+                if(panel.id !== panelId) {
+                    panel.classList.remove('active');
+                }
+            });
+
+            // Toggle target panel
+            const targetPanel = document.getElementById(panelId);
+            targetPanel.classList.toggle('active');
+        }
+
+        // Switch Script Tabs
+        function switchScenario(scenarioId) {
+            // Remove active classes from all buttons and boxes
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.script-box').forEach(box => {
+                box.classList.remove('active');
+                box.style.display = 'none';
+            });
+
+            // Set current tab active
+            const clickedBtn = event.currentTarget;
+            clickedBtn.classList.add('active');
+
+            // Set current script active with slight delay for transition
+            const targetBox = document.getElementById(scenarioId);
+            targetBox.style.display = 'block';
+            setTimeout(() => {
+                targetBox.classList.add('active');
+            }, 50);
+        }
+
+        // Action: Copy script content
+        function copyCurrentScript() {
+            const activeScriptBox = document.querySelector('.script-box.active .script-highlight');
+            if (activeScriptBox) {
+                const text = activeScriptBox.innerText.replace(/[「」]/g, ''); // strip the decorative brackets
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('已複製 AI 專屬話術！您可以直接貼上傳送給客戶');
+                });
+            }
+        }
+
+        // Action: Simulated sending
+        function sendToClient() {
+            showToast('🚀 已調用後台 API！正為篩選之客群生成個人化 HTML 簡報，即將開啟通訊軟體...');
+        }
+
+        // Custom Toast system
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastText = document.getElementById('toast-text');
+            toastText.innerText = message;
+            
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3500);
+        }
+    </script>
+</body>
+</html>

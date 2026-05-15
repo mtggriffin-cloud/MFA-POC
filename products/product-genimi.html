@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AXA安盛 - 「享未來」人壽保障</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        axa: {
+                            blue: '#00008f',
+                            red: '#ff004f',
+                            lightblue: '#f0f4f8'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Noto Sans TC"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* 動態滾動顯示效果 */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+        }
+        
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal-left {
+            opacity: 0;
+            transform: translateX(-40px);
+            transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+        }
+        
+        .reveal-left.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .reveal-right {
+            opacity: 0;
+            transform: translateX(40px);
+            transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+        }
+        
+        .reveal-right.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .delay-100 { transition-delay: 100ms; }
+        .delay-200 { transition-delay: 200ms; }
+        .delay-300 { transition-delay: 300ms; }
+        .delay-400 { transition-delay: 400ms; }
+
+        /* 漸變背景覆蓋 */
+        .hero-overlay {
+            background: linear-gradient(to right, rgba(0, 0, 143, 0.85) 0%, rgba(0, 0, 143, 0.4) 100%);
+        }
+
+        .portal-switch {
+            position: fixed;
+            right: 18px;
+            bottom: 20px;
+            z-index: 60;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.15);
+            border-radius: 999px;
+            padding: 8px 10px;
+            backdrop-filter: blur(8px);
+        }
+
+        .portal-switch button,
+        .portal-switch a {
+            border: none;
+            text-decoration: none;
+            background: transparent;
+            color: #111827;
+            font-weight: 700;
+            font-size: 13px;
+            border-radius: 999px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .portal-switch button:hover,
+        .portal-switch a:hover {
+            background: #eff6ff;
+            color: #00008f;
+        }
+
+        .portal-tag {
+            font-size: 12px;
+            color: #4b5563;
+            font-weight: 700;
+            padding: 0 4px;
+        }
+
+        body.page-enter {
+            animation: pageEnter 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        body.slide-out-left {
+            animation: slideOutLeft 0.45s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+        }
+
+        body.slide-out-right {
+            animation: slideOutRight 0.45s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+        }
+
+        @keyframes pageEnter {
+            from {
+                opacity: 0;
+                transform: translateX(28px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideOutLeft {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0.1;
+                transform: translateX(-24vw);
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0.1;
+                transform: translateX(24vw);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .portal-switch {
+                right: 10px;
+                left: 10px;
+                justify-content: center;
+            }
+
+            .portal-tag {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="font-sans text-gray-800 bg-gray-50 overflow-x-hidden antialiased page-enter">
+
+    <div class="portal-switch" aria-label="入口導覽列">
+        <a href="../market_insights/demo_macro_market_insights.html">回到市場首頁</a>
+        <span class="portal-tag">產品切換</span>
+        <button type="button" onclick="navigateProduct('left')">← 左滑到 Claude</button>
+    </div>
+
+    <!-- 導航欄 -->
+    <nav class="fixed w-full z-50 bg-white shadow-md py-4 px-6 transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <div class="text-axa-blue font-black text-3xl tracking-tighter border-b-4 border-axa-red leading-none">AXA</div>
+                <div class="text-axa-blue font-bold text-xl ml-2">安盛</div>
+            </div>
+            <div class="hidden md:block text-gray-500 font-medium">人壽保障及儲蓄</div>
+        </div>
+    </nav>
+
+    <!-- 主視覺區域 (Hero) -->
+    <header class="relative min-h-screen flex items-center justify-start pt-20">
+        <!-- 背景圖片：大學畢業生與家人，呼應原PDF -->
+        <div class="absolute inset-0 z-0">
+            <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070&auto=format&fit=crop" alt="Graduation Family" class="w-full h-full object-cover object-center" />
+            <div class="absolute inset-0 hero-overlay"></div>
+        </div>
+
+        <div class="relative z-10 max-w-7xl mx-auto px-6 w-full">
+            <div class="max-w-2xl text-white">
+                <p class="reveal text-axa-red font-bold text-lg md:text-xl mb-4 bg-white inline-block px-4 py-1 rounded-full shadow-lg">「享未來」人壽保障</p>
+                <h1 class="reveal delay-100 text-5xl md:text-7xl font-bold mb-6 leading-tight">保障未來<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">豐碩盡享</span></h1>
+                <p class="reveal delay-200 text-xl md:text-2xl font-light mb-8 opacity-90 leading-relaxed">未雨綢繆，讓摯愛家人生活無憂。<br>一站式人壽保障及儲蓄方案，伴您邁向人生目標。</p>
+                <div class="reveal delay-300">
+                    <button onclick="scrollToCTA()" class="bg-axa-red hover:bg-red-700 text-white font-bold py-4 px-8 rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center gap-2">
+                        探索四大優勢
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.707 10.293a1 1 0 010 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l4.293-4.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 理念介紹 -->
+    <section class="py-20 bg-white">
+        <div class="max-w-4xl mx-auto px-6 text-center reveal">
+            <h2 class="text-3xl md:text-4xl font-bold text-axa-blue mb-6">全心全意追求夢想的同時</h2>
+            <div class="w-24 h-1 bg-axa-red mx-auto mb-8"></div>
+            <p class="text-lg md:text-xl text-gray-600 leading-relaxed">
+                您需要一份可靠的保險計劃，為您及摯愛家人的未來提供穩健的財政保障。「享未來」為分紅壽險計劃，更與「享未來」意外保險附加契約同時繕發，讓您兼享周全的意外保障。
+            </p>
+        </div>
+    </section>
+
+    <!-- 核心特點 (Features) -->
+    <section id="features" class="py-24 bg-axa-lightblue">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-4xl font-bold text-axa-blue mb-4">計劃特點</h2>
+                <p class="text-gray-500 text-lg">四大核心優勢，成就您與家人的理想未來</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
+                <!-- 特點 1 -->
+                <div class="reveal-left bg-white p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 border-t-4 border-axa-blue">
+                    <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 text-axa-blue">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">人壽保障至 100 歲</h3>
+                    <p class="text-gray-600 leading-relaxed">為摯愛家人籌劃將來，讓您無懼突變。如不幸身故，指定受益人將可獲發身故保險賠償（包括基本保額及紅利面值）。</p>
+                </div>
+
+                <!-- 特點 2 -->
+                <div class="reveal-right delay-100 bg-white p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 border-t-4 border-axa-red">
+                    <div class="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mb-6 text-axa-red">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 12h.01"/><path d="M17 12h.01"/><path d="M7 12h.01"/></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">保證現金價值</h3>
+                    <p class="text-gray-600 leading-relaxed">提供保證現金價值，並於保單退保或期滿時支付。助您穩步累積財富，自信開展人生的每一個新階段。</p>
+                </div>
+
+                <!-- 特點 3 -->
+                <div class="reveal-left delay-200 bg-white p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 border-t-4 border-axa-blue">
+                    <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 text-axa-blue">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">保額增值及終期紅利</h3>
+                    <p class="text-gray-600 leading-relaxed">保單生效3年後，您可享非保證之保額增值紅利（每年宣派）及終期紅利（一次過），有效增加您的儲蓄回報。</p>
+                </div>
+
+                <!-- 特點 4 -->
+                <div class="reveal-right delay-300 bg-white p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 border-t-4 border-axa-red">
+                    <div class="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mb-6 text-axa-red">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">免費意外附加保障</h3>
+                    <p class="text-gray-600 leading-relaxed">基本計劃與「意外附加契約」同時繕發。一旦不幸遇到意外，為您及家人提供一筆過賠償，減輕突如其來的財政壓力。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 深入了解意外保障 -->
+    <section class="py-24 bg-white overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col lg:flex-row items-center gap-16">
+                <div class="w-full lg:w-1/2 reveal-left">
+                    <h2 class="text-3xl md:text-4xl font-bold text-axa-blue mb-6">「享未來」意外保險附加契約</h2>
+                    <p class="text-gray-600 text-lg mb-8 leading-relaxed">
+                        讓您未雨綢繆。一旦發生意外，我們將提供一筆過現金賠償，最高可達附加契約保額的 <strong>200%</strong>，助您勇敢面對轉變。
+                    </p>
+                    <ul class="space-y-6">
+                        <li class="flex items-start">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-axa-blue text-white flex items-center justify-center font-bold mt-1">1</div>
+                            <div class="ml-4">
+                                <h4 class="text-xl font-bold text-gray-800">意外身故及斷肢</h4>
+                                <p class="text-gray-600 mt-1">提供高達保額 100% 的現金賠償。</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-axa-red text-white flex items-center justify-center font-bold mt-1">2</div>
+                            <div class="ml-4">
+                                <h4 class="text-xl font-bold text-gray-800">雙倍意外身故賠償</h4>
+                                <p class="text-gray-600 mt-1">若作為公共交通工具乘客、行人於交通意外，或遺下受供養子女/父母，賠償高達 200%。</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-axa-blue text-white flex items-center justify-center font-bold mt-1">3</div>
+                            <div class="ml-4">
+                                <h4 class="text-xl font-bold text-gray-800">嚴重意外受傷</h4>
+                                <p class="text-gray-600 mt-1">如意外導致昏迷、癱瘓、成為植物人等，提供相等於保額 100% 賠償。</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="w-full lg:w-1/2 reveal-right relative">
+                    <div class="absolute inset-0 bg-axa-lightblue transform rounded-3xl translate-x-4 translate-y-4 -z-10"></div>
+                    <img src="https://images.unsplash.com/photo-1573497620053-ea5300f94f21?q=80&w=1974&auto=format&fit=crop" alt="Financial Advisor" class="rounded-3xl shadow-xl w-full h-auto object-cover aspect-[4/3]">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 財務靈活性 -->
+    <section class="py-20 bg-axa-blue text-white text-center">
+        <div class="max-w-4xl mx-auto px-6 reveal">
+            <h2 class="text-3xl md:text-4xl font-bold mb-6">輕鬆理財，靈活配合人生階段</h2>
+            <p class="text-lg md:text-xl text-blue-100 mb-8 leading-relaxed">
+                您可靈活提取已宣派之紅利現金價值、申請保單貸款作應急之用，甚至選擇減少基本保額以配合不同時期的財務需要。您亦可按個人需要，增添危疾或醫療等附加保障。
+            </p>
+            <div class="w-24 h-1 bg-white opacity-30 mx-auto"></div>
+        </div>
+    </section>
+
+    <!-- ✨ AI 專屬保障分析 (Gemini API Integration) -->
+    <section class="py-24 bg-white relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-blue-50 to-white opacity-50 pointer-events-none"></div>
+        <div class="max-w-5xl mx-auto px-6 relative z-10">
+            <div class="text-center mb-12 reveal">
+                <span class="inline-block py-1 px-3 rounded-full bg-blue-100 text-axa-blue font-bold text-sm mb-4">✨ 智能體驗</span>
+                <h2 class="text-3xl md:text-4xl font-bold text-axa-blue mb-4">AI 專屬保障分析</h2>
+                <p class="text-gray-600 text-lg">告訴我們您的現況，AI 將為您分析「享未來」如何助您達成人生目標。</p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.08)] p-8 md:p-12 border border-gray-100 reveal delay-100">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">您的年齡</label>
+                        <select id="userAge" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-axa-blue focus:border-transparent">
+                            <option value="25歲或以下">25歲或以下</option>
+                            <option value="26-35歲" selected>26-35歲</option>
+                            <option value="36-45歲">36-45歲</option>
+                            <option value="46-55歲">46-55歲</option>
+                            <option value="56歲或以上">56歲或以上</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">人生階段</label>
+                        <select id="userStage" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-axa-blue focus:border-transparent">
+                            <option value="單身貴族">單身貴族</option>
+                            <option value="新婚家庭" selected>新婚家庭</option>
+                            <option value="新手父母">新手父母</option>
+                            <option value="為子女籌備升學">為子女籌備升學</option>
+                            <option value="準備退休">準備退休</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">主要理財目標</label>
+                        <select id="userGoal" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-axa-blue focus:border-transparent">
+                            <option value="財富增值">財富增值</option>
+                            <option value="家人生活保障" selected>家人生活保障</option>
+                            <option value="子女教育基金">子女教育基金</option>
+                            <option value="退休儲備">退休儲備</option>
+                            <option value="意外應急錢">意外應急錢</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <button id="analyzeBtn" onclick="generateAIAnalysis()" class="bg-axa-blue hover:bg-blue-800 text-white font-bold py-4 px-10 rounded-full shadow-lg transform hover:-translate-y-1 transition-all duration-300 flex items-center gap-2 mx-auto">
+                        <span>✨ 獲取我的專屬分析</span>
+                    </button>
+                </div>
+
+                <!-- 載入中動畫 -->
+                <div id="aiLoading" class="hidden mt-10 flex-col items-center justify-center">
+                    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-axa-blue mb-4"></div>
+                    <p class="text-gray-500 animate-pulse">AI 理財顧問正在為您分析中...</p>
+                </div>
+
+                <!-- 分析結果 -->
+                <div id="aiResultContainer" class="hidden mt-10 bg-axa-lightblue rounded-xl p-8 border-l-4 border-axa-red relative">
+                    <h3 class="text-xl font-bold text-axa-blue mb-4 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-axa-red" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+                        您的專屬保障方案建議
+                    </h3>
+                    <div id="aiResultText" class="text-gray-700 leading-relaxed prose prose-blue max-w-none">
+                        <!-- 結果將顯示在這裡 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section id="cta" class="py-24 bg-gray-50">
+        <div class="max-w-4xl mx-auto px-6 text-center reveal">
+            <h2 class="text-4xl md:text-5xl font-black text-gray-800 mb-6">準備好保障您的未來了嗎？</h2>
+            <p class="text-xl text-gray-600 mb-10">立即與我們的專業理財顧問團隊聯絡，為您度身訂造最合適的「享未來」方案。</p>
+            
+            <a href="calculator-genimi.html" class="inline-block bg-axa-red hover:bg-red-700 text-white font-bold text-xl py-5 px-12 rounded-full shadow-[0_10px_20px_rgba(255,0,79,0.3)] transform hover:-translate-y-1 hover:shadow-[0_15px_30px_rgba(255,0,79,0.4)] transition-all duration-300">
+                開始投保
+            </a>
+            <p class="mt-6 text-sm text-gray-400">了解更多有關計劃特色及詳細條款</p>
+        </div>
+    </section>
+
+    <!-- 頁腳 -->
+    <footer class="bg-gray-900 text-gray-400 py-12 text-sm text-center">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="mb-4">
+                <span class="text-white font-bold text-xl tracking-tighter">AXA</span> <span class="text-white font-bold">安盛</span>
+            </div>
+            <p class="mb-4">此資料僅供參考。詳細條款、細則及不保事項，請參閱相關之保單合約及產品說明書。</p>
+            <p>&copy; 2026 AXA 安盛金融保險 (香港) 有限公司。保留所有權利。</p>
+        </div>
+    </footer>
+
+    <!-- 動態腳本 -->
+    <script>
+        // 滾動觸發動畫
+        document.addEventListener("DOMContentLoaded", function() {
+            const revealElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
+            
+            const revealOptions = {
+                threshold: 0.15,
+                rootMargin: "0px 0px -50px 0px"
+            };
+
+            const revealOnScroll = new IntersectionObserver(function(entries, observer) {
+                entries.forEach(entry => {
+                    if (!entry.isIntersecting) {
+                        return;
+                    } else {
+                        entry.target.classList.add('active');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, revealOptions);
+
+            revealElements.forEach(el => {
+                revealOnScroll.observe(el);
+            });
+
+            // 導航欄滾動效果
+            const navbar = document.getElementById('navbar');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('shadow-md', 'bg-white/95', 'backdrop-blur-sm');
+                    navbar.classList.remove('py-4');
+                    navbar.classList.add('py-2');
+                } else {
+                    navbar.classList.remove('bg-white/95', 'backdrop-blur-sm');
+                    navbar.classList.add('py-4');
+                    navbar.classList.remove('py-2');
+                }
+            });
+        });
+
+        // 按鈕平滑滾動
+        function scrollToCTA() {
+            document.getElementById('features').scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+        }
+
+        // --- Gemini API 整合 ---
+        const apiKey = ""; // 系統會在執行環境自動填入
+
+        async function fetchWithRetry(url, options, maxRetries = 5) {
+            const delays = [1000, 2000, 4000, 8000, 16000];
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    if (i === maxRetries - 1) throw error;
+                    await new Promise(resolve => setTimeout(resolve, delays[i]));
+                }
+            }
+        }
+
+        async function generateAIAnalysis() {
+    const age = document.getElementById('userAge').value;
+    const stage = document.getElementById('userStage').value;
+    const goal = document.getElementById('userGoal').value;
+    
+    const btn = document.getElementById('analyzeBtn');
+    const loading = document.getElementById('aiLoading');
+    const resultContainer = document.getElementById('aiResultContainer');
+    const resultText = document.getElementById('aiResultText');
+
+    // UI State: Reset and Show Loading
+    btn.disabled = true;
+    btn.classList.add('opacity-50', 'cursor-not-allowed');
+    resultText.innerHTML = ""; 
+    resultContainer.classList.remove('hidden');
+    loading.classList.remove('hidden');
+    loading.classList.add('flex');
+
+    const systemPrompt = `你是一位專業且富有同理心的 AXA 安盛理財顧問。
+請根據用戶提供的「年齡」、「人生階段」及「理財目標」，推薦「享未來」人壽保障計劃。
+產品特點包括：1. 人壽保障至100歲、2. 保證現金價值、3. 非保證紅利、4. 免費意外保險附加契約。
+請寫一段約 150-200 字的繁體中文分析，語氣要親切專業，直接向用戶說明計劃如何達成目標。`;
+
+    const userPrompt = `用戶資料：
+- 年齡：${age}
+- 人生階段：${stage}
+- 主要理財目標：${goal}
+
+請提供專屬分析建議。`;
+
+    const url = `https://ai-platform-router-aitoolkit-dv-h.axa-hk-preprod-hpl-int.berry.eastasia.azure.openpaas.axa-cloud.com/v1/chat/google/v1/models/gemini-2.5-flash:streamGenerateContent`;
+    
+    const payload = {
+        contents: [{
+            role: "user",
+            parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }]
+        }]
+    };
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'x-goog-api-key': 'sk-32383164d4dade211d144d375d4b29e6900afa7f42a25a2d00312171def42f6e'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        // Read the entire response as text first
+        const rawResponse = await response.text();
+        let fullContent = "";
+
+        try {
+            // Parse the response as a JSON array
+            const dataArray = JSON.parse(rawResponse);
+
+            // Iterate through each object in the array to extract parts.text
+            dataArray.forEach(item => {
+                if (item.candidates && item.candidates[0].content && item.candidates[0].content.parts) {
+                    item.candidates[0].content.parts.forEach(part => {
+                        if (part.text) {
+                            fullContent += part.text;
+                        }
+                    });
+                }
+            });
+        } catch (parseError) {
+            console.error("JSON Parse Error:", parseError);
+            throw new Error("API returned invalid JSON format.");
+        }
+
+        if (fullContent) {
+            // Use marked to render the combined text
+            resultText.innerHTML = marked.parse(fullContent);
+        } else {
+            throw new Error("No content found in API response.");
+        }
+
+    } catch (error) {
+        console.error("Analysis Error:", error);
+        resultText.innerHTML = `<p class="text-red-600 font-medium">抱歉，AI 分析目前無法顯示。請確保 API 金鑰有效並檢查網路連線。</p>`;
+    } finally {
+        loading.classList.add('hidden');
+        loading.classList.remove('flex');
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+}
+
+
+
+
+
+    </script>
+    <script>
+        let startX = 0;
+        let endX = 0;
+
+        function navigateProduct(direction) {
+            if (direction === 'left') {
+                document.body.classList.add('slide-out-left');
+                setTimeout(() => {
+                    window.location.href = 'product-claude.html';
+                }, 420);
+            }
+        }
+
+        function handleSwipe() {
+            const delta = endX - startX;
+            if (Math.abs(delta) < 60) return;
+
+            if (delta < 0) {
+                navigateProduct('left');
+            }
+        }
+
+        document.addEventListener('touchstart', (e) => {
+            startX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        document.addEventListener('touchend', (e) => {
+            endX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                navigateProduct('left');
+            }
+        });
+    </script>
+</body>
+</html>
